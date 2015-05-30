@@ -4,6 +4,7 @@
 
 using SFML.Window;
 using System;
+using System.Media;
 
 namespace Chipset8Emu
 {
@@ -47,7 +48,7 @@ namespace Chipset8Emu
             switch (_opcode & 0xF000) // Check first 4 bits of opcode.
             {
                 case 0x000:
-                    if ((_opcode & 0x000F) == 0x000)
+                    if ((_opcode & 0x000F) == 0x0000)
                     {
                         // Clear the screen.
                         _graphics.Clear();
@@ -57,6 +58,7 @@ namespace Chipset8Emu
                     else if ((_opcode & 0x000F) == 0x00E)
                     {
                         _programCounter = _memory.GetStackFrame(--_stackPointer);
+                        _programCounter += 2;
                     }
                     break;
 
@@ -128,6 +130,7 @@ namespace Chipset8Emu
                 case 0xA000: // Sets the value of the index register to NNN.
                     _indexRegister = (ushort)(_opcode & 0x0FFF);
                     _programCounter += 2;
+
                     break;
 
                 case 0xB000: // Jumps to the address NNN + the value stored at register 0.
@@ -195,6 +198,12 @@ namespace Chipset8Emu
                     Console.WriteLine("Unknown instruction {0}!", _opcode);
                     break;
             }
+
+            // Decrease the timers by 1.
+            if (_delayTimer != 0)
+                _delayTimer--;
+            if (_soundTimer != 0)
+                _soundTimer--;
         }
 
         private void OpSRTF()
@@ -202,7 +211,7 @@ namespace Chipset8Emu
             switch (_opcode & 0x00FF)
             {
                 case 0x0007: // Set value of register X to the delay timer.
-                    _memory.SetCell((_opcode & 0x0F00) >> 8, _delayTimer);
+                    _memory.SetRegister((_opcode & 0x0F00) >> 8, _delayTimer);
                     _programCounter += 2;
                     break;
 
@@ -216,12 +225,14 @@ namespace Chipset8Emu
 
                 case 0x0015:
                     // Set the delay timer to the value stored at register X.
-                    _delayTimer = _memory.GetCell((_opcode & 0x0F00) >> 8);
+                    _delayTimer = _memory.GetRegister((_opcode & 0x0F00) >> 8);
+                    _programCounter += 2;
                     break;
 
                 case 0x0018:
                     // Set the sound timer to the value stored at register X.
-                    _soundTimer = _memory.GetCell((_opcode & 0x0F00) >> 8);
+                    _soundTimer = _memory.GetRegister((_opcode & 0x0F00) >> 8);
+                    _programCounter += 2;
                     break;
 
                 case 0x001E:
@@ -316,7 +327,7 @@ namespace Chipset8Emu
                     break;
 
                 case 0x0006:
-                    _memory.SetRegister(0xF, (byte)(_memory.GetRegister((_opcode & 0x0F00) >> 8) & 1)); // Get LSB.
+                    _memory.SetRegister(0xF, (byte)(_memory.GetRegister((_opcode & 0x0F00) >> 8) & 0x01)); // Get LSB.
                     _memory.SetRegister((_opcode & 0x0F00) >> 8, (byte)(_memory.GetRegister((_opcode & 0x0F00) >> 8) >> 1));
                     _programCounter += 2;
                     break;

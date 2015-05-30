@@ -84,8 +84,9 @@ namespace Chipset8Emu
             var endCycleTime = Environment.TickCount;
             var cycleTime = endCycleTime - startCycleTime;
 
-            if (cycleTime < (1000 / 60))
-                System.Threading.Thread.Sleep((1000 / 60) - cycleTime);
+            // TODO: fix timing.
+            //if (cycleTime < (1000 / 60))
+            //    System.Threading.Thread.Sleep((1000 / 60) - cycleTime);
         }
 
         private void HandleError(string reason)

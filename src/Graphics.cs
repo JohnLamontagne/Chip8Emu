@@ -19,10 +19,7 @@ namespace Chipset8Emu
 
         public void Clear()
         {
-            for (int i = 0; i < _frameImage.Pixels.Length; i++)
-            {
-                _frameImage.Pixels[i] = 0;
-            }
+            _frameImage = new Image(_frameImage.Size.X, _frameImage.Size.Y);
         }
 
         public byte GetPixel(uint x, uint y)

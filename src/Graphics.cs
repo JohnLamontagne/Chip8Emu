@@ -30,11 +30,13 @@ namespace Chipset8Emu
         public void SetPixel(uint x, uint y, bool state)
         {
             _frameImage.SetPixel(x, y, state ? Color.White : Color.Black);
+            _frameSprite.Texture = new Texture(_frameImage);
         }
 
         public void TogglePixel(uint x, uint y)
         {
             _frameImage.SetPixel(x, y, _frameImage.GetPixel(x, y) == Color.White ? Color.Black : Color.White);
+            _frameSprite.Texture = new Texture(_frameImage);
         }
 
         public void TogglePixels()
@@ -52,8 +54,6 @@ namespace Chipset8Emu
         {
             _window.DispatchEvents();
             _window.Clear(Color.Black);
-
-            _frameSprite.Texture = new Texture(_frameImage);
 
             _window.Draw(_frameSprite);
 

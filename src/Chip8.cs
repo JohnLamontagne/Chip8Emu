@@ -79,14 +79,15 @@ namespace Chipset8Emu
         {
             var startCycleTime = Environment.TickCount;
             _cpu.ExecuteCycle();
-            _graphics.ExecuteCycle();
+
+            if (_cpu.DrawFlag)
+            {
+                _graphics.ExecuteCycle();
+                _cpu.DrawFlag = false;
+            }
 
             var endCycleTime = Environment.TickCount;
             var cycleTime = endCycleTime - startCycleTime;
-
-            // TODO: fix timing.
-            //if (cycleTime < (1000 / 60))
-            //    System.Threading.Thread.Sleep((1000 / 60) - cycleTime);
         }
 
         private void HandleError(string reason)

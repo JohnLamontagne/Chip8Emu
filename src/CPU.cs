@@ -24,6 +24,8 @@ namespace Chipset8Emu
 
         private Random _random;
 
+        public bool DrawFlag { get; set; }
+
         public CPU(Memory memory, Graphics graphics, Input input)
         {
             _memory = memory;
@@ -52,6 +54,7 @@ namespace Chipset8Emu
                     {
                         // Clear the screen.
                         _graphics.Clear();
+                        this.DrawFlag = true;
 
                         _programCounter += 2;
                     }
@@ -130,7 +133,6 @@ namespace Chipset8Emu
                 case 0xA000: // Sets the value of the index register to NNN.
                     _indexRegister = (ushort)(_opcode & 0x0FFF);
                     _programCounter += 2;
-
                     break;
 
                 case 0xB000: // Jumps to the address NNN + the value stored at register 0.
@@ -164,20 +166,22 @@ namespace Chipset8Emu
                         }
                     }
 
+                    this.DrawFlag = true;
+
                     _programCounter += 2;
                     break;
 
                 case 0xE000:
                     if ((_opcode & 0x00FF) == 0x009E)
                     {
-                        if (_memory.GetRegister((_opcode & 0x0F00) >> 8) == _input.KeyPressed)
+                        if (_input.KeyPressed[_memory.GetRegister((_opcode & 0x0F00) >> 8)])
                             _programCounter += 4;
                         else
                             _programCounter += 2;
                     }
                     else if ((_opcode & 0x00FF) == 0x00A1)
                     {
-                        if (_memory.GetRegister((_opcode & 0x0F00) >> 8) != _input.KeyPressed)
+                        if (!_input.KeyPressed[_memory.GetRegister((_opcode & 0x0F00) >> 8)])
                             _programCounter += 4;
                         else
                             _programCounter += 2;
@@ -216,11 +220,17 @@ namespace Chipset8Emu
                     break;
 
                 case 0x000A:
-                    if (_input.KeyPressed != null) // Wait until a key is pressed and then store said key into register X.
+
+                    for (byte i = 0; i < 0xF; i++)
                     {
-                        _memory.SetCell((_opcode & 0x0F00) >> 8, (byte)_input.KeyPressed);
-                        _programCounter += 2;
+                        if (_input.KeyPressed[i])
+                        {
+                            _memory.SetCell((_opcode & 0x0F00) >> 8, i);
+                            _programCounter += 2;
+                            break;
+                        }
                     }
+
                     break;
 
                 case 0x0015:
@@ -241,14 +251,14 @@ namespace Chipset8Emu
                     break;
 
                 case 0x0029:
-                    _indexRegister = (ushort)(_memory.GetCell((_opcode & 0x0F00) >> 8) * 5);
+                    _indexRegister = (ushort)(_memory.GetRegister((_opcode & 0x0F00) >> 8) * 5);
                     _programCounter += 2;
                     break;
 
                 case 0x0033:
                     _memory.SetCell(_indexRegister, (byte)(_memory.GetRegister((_opcode & 0x0F00) >> 8) / 100));
                     _memory.SetCell(_indexRegister + 1, (byte)((_memory.GetRegister((_opcode & 0x0F00) >> 8) / 10) % 10));
-                    _memory.SetCell(_indexRegister + 1, (byte)((_memory.GetRegister((_opcode & 0x0F00) >> 8) % 100) % 10));
+                    _memory.SetCell(_indexRegister + 2, (byte)((_memory.GetRegister((_opcode & 0x0F00) >> 8) % 100) % 10));
                     _programCounter += 2;
                     break;
 
@@ -260,6 +270,7 @@ namespace Chipset8Emu
                         _memory.SetCell(_indexRegister + i, _memory.GetRegister(i));
                     }
 
+                    _indexRegister = (ushort)(_indexRegister + endRegister + 1);
                     _programCounter += 2;
 
                     break;
@@ -272,6 +283,7 @@ namespace Chipset8Emu
                         _memory.SetRegister(i, _memory.GetCell(_indexRegister + i));
                     }
 
+                    _indexRegister = (ushort)(_indexRegister + endReg + 1);
                     _programCounter += 2;
                     break;
 
